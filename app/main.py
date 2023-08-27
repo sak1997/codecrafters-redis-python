@@ -2,13 +2,22 @@
 import socket
 import _thread
 
-def sendPong(conn):
+def processRequest(conn):
     while True:
         request = conn.recv(4096)
-        conn.send(b"+PONG\r\n")
-    # print("here")
-    # conn.shutdown(socket.SHUT_WR)
-    # conn.close()
+        # print(request)
+
+        decodedRequest = request.decode("utf-8")
+        requestParams = decodedRequest.split('\r\n')
+        print(requestParams)
+
+        requestParamsCount = int(requestParams[0][1:])
+        # print("number of params = ", requestParamsCount)
+
+        if(requestParams[2].lower() == "ping"):
+           conn.send(b"+PONG\r\n")
+        elif(requestParams[2].lower() == 'echo'):
+            conn.send(bytes("+" + requestParams[4] + "\r\n", "utf-8"))
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -19,12 +28,10 @@ def main():
 
     while True:
         conn, address = server_socket.accept() # wait for client
-        _thread.start_new_thread(sendPong, (conn, ))
-        # request = conn.recv(4096)
-        # conn.send(b"+PONG\r\n")
+        _thread.start_new_thread(processRequest, (conn, ))
     
-    conn.shutdown(socket.SHUT_WR)
-    conn.close()
+        # conn.shutdown(socket.SHUT_WR)
+        # conn.close()
 
 
 if __name__ == "__main__":
